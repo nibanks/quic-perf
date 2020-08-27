@@ -114,7 +114,11 @@ data.  If no data is requested by the client, the server need take no action.
 # Example Performance Scenarios
 
 All stream payload based tests below can be achieved either with bidirectional
-or unidirectional streams.
+or unidirectional streams.  Generally, the goal of all these performance tests
+is to measure the maximum load that can be achieved with the given QUIC
+implementation and hardware configuration.  To that end, the network is not
+expected to be the bottleneck in any of these tests.  To achieve that, the
+appropriate network hardware must be used so as to not limit throughput.
 
 ## Single Connection Bulk Throughput
 
