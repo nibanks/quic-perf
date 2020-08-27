@@ -176,13 +176,25 @@ There are a few important things to note when doing performance testing.
 
 ## What Data Should be Sent?
 
+Since the goal here is to measure the efficiency of the QUIC implementation and
+not any application protocol, the performance application layer should be as
+light-weight as possible.  To this end, the client and server application layer
+may use a single preallocated and initialized buffer that it queues to send when
+any payload needs to be sent out.
+
 ## Ramp up Congestion Control or Not?
 
-TODO
+When running CPU limited, and not network limited, performance tests ideally we
+don't care too much about the congestion control state.  That being said,
+assuming the tests run for enough time, generally congestion control should ramp
+up very quickly and not be a measureable factor in the measurements that result.
 
 ## Disabling Encryption
 
-TODO - Point to quic-disable-encryption draft
+A common topic when talking about QUIC performance is the effect that its
+encryption has.  The draft-banks-quic-disable-encryption draft specifies a way
+for encryption to be mutually negotiated to be disabled so that an A:B test can
+be made to measure the "cost of encryption" in QUIC.
 
 # Security Considerations
 
