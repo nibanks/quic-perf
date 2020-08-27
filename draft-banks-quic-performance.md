@@ -119,8 +119,9 @@ or unidirectional streams.
 ## Single Connection Bulk Throughput
 
 Bulk data throughput on a single QUIC connection is probably the most common
-metric when first discussing the performance of a QUIC implementation.  It may
-be either an upload or download.  It can be of any desired length.
+metric when first discussing the performance of a QUIC implementation.  It uses
+only a single QUIC connection.  It may be either an upload or download.  It can
+be of any desired length.
 
 For an upload test, the client need only open a single stream, encodes a zero
 server response size, sends the upload payload and then closes (FIN) the stream.
@@ -129,14 +130,41 @@ For a download test, the client again opens a single stream, encodes the
 server's response size (N bytes) and then closes the stream.
 
 The total throughput rate is measured by the client, and is calculated by
-dividing the total bytes sent or received by
+dividing the total bytes sent or received by difference in time from when the
+client created its initial stream to the time the client received the server's
+FIN.
 
 ## Requests Per Second
 
 Another very common performance metric is calculating the maximum requests per
-second that a QUIC server can handle.
+second that a QUIC server can handle.  Unlike the bulk throughput test above,
+this test generally requires many parallel connections (possibly from multiple
+client machines) in order to saturate the server properly.  There are several
+variables that tend to directly affect the results of this test:
 
-TODO
+ - The number of parallel connections.
+ - The size of the client's request.
+ - The size of the server's response.
+
+All of the above variables may be changed to measure the maximum RPS in the
+given scenario.
+
+The test starts with the client connecting all parallel connections and waiting
+for them to be connected.  It's recommended to wait an additional couple of
+seconds for things to settle down.
+
+The client then starts sending "requests" on each connection. Specifically, the
+client should keep at least one request pending (preferrably at least two) on
+each connection at all times.  When a request completes (receive server's FIN)
+the client should immediately queue another request.
+
+The client continues to do this for a configured period of time.  From my
+testing, ten seconds seems to be a good amount of time to reach the steady
+state.
+
+Finally, the client measures the maximum requests per second rate as the total
+number of requests completed divided by the total execution time of the
+requests phase of the connection (not including the handshake and wait period).
 
 ## Handshakes Per Second
 
@@ -146,13 +174,15 @@ TODO
 
 There are a few important things to note when doing performance testing.
 
-## Disabling Encryption
-
-TODO - Point to quic-disable-encryption draft
+## What Data Should be Sent?
 
 ## Ramp up Congestion Control or Not?
 
 TODO
+
+## Disabling Encryption
+
+TODO - Point to quic-disable-encryption draft
 
 # Security Considerations
 
