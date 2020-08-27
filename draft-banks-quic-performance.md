@@ -1,7 +1,7 @@
 ---
 title: QUIC Performance
 abbrev: QUIC-PERF
-docname: draft-banks-quic-perf-00
+docname: draft-banks-quic-performance-00
 category: exp
 date: 2020
 
