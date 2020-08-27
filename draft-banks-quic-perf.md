@@ -55,7 +55,8 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Specification
 
-TODO
+The sections below describe the mechanisms used by a client to connect to a
+QUIC perf server and execute various performance scenarios.
 
 ## Protocol Negotiation
 
@@ -72,6 +73,48 @@ use a custom transport parameter.
 
 TODO - First 8 bytes of a stream from a client indicates the requested response
 size.
+
+# Example Performance Scenarios
+
+Generally, all stream payload based tests can be achieved either with
+bidirectional or unidirectional streams.  The only difference is that the
+server's response is on the same stream for bidirectional streams but on a new
+stream when using unidirectional streams.
+
+## Single Connection Bulk Throughput
+
+Bulk data throughput on a single QUIC connection is probably the most common
+metric when first discussing the performance of a QUIC implementation.  It may
+be either an upload or download.  It can be of any desired length.
+
+For an upload test, the client need only open a single stream, encodes a zero
+server response size, sends the upload payload and then closes (FIN) the stream.
+
+For a download test, the client again opens a single stream, encodes the
+server's response size (N bytes) and then closes the stream.
+
+## Requests Per Second
+
+Another very common performance metric is calculating the maximum requests per
+second that a QUIC server can handle.
+
+TODO
+
+## Handshakes Per Second
+
+TODO
+
+# Things to Note
+
+There are a few important things to note when doing performance testing.
+
+## Disabling Encryption
+
+TODO - Point to quic-disable-encryption draft
+
+## Ramp up Congestion Control or Not?
+
+TODO
 
 # Security Considerations
 
