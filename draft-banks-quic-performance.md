@@ -71,15 +71,50 @@ use a custom transport parameter.
 
 ## Streams
 
-TODO - First 8 bytes of a stream from a client indicates the requested response
-size.
+The performance protocol is primarily centered around sending and receiving
+data.  Streams are the primary vehicle for this.  All performance tests are
+client-driven:
+
+ - The client opens a stream.
+ - The client encodes the size of the requested server response.
+ - The client sends any data it wishes to.
+ - The client cleanly closes the stream with a FIN.
+
+When a server receives a stream does the following:
+
+ - The server accepts the new stream.
+ - The server processes the encoded response size.
+ - The server drains the rest of the client data.
+ - The server then sends any response payload that was requested.
+
+**Note** - Should the server wait for FIN before replying?
+
+### Encoding Server Response Size
+
+Every stream opened by the client uses the first 8 bytes of the stream data to
+encode a 64-bit unsigned integer in network byte order to indicate the length of
+data the client wishes the server to respond with.  An encoded value of zero is
+perfectly legal, and a value of MAX_UINT64 (0xFFFFFFFFFFFFFFFF) is practically
+used to indicate an unlimited server response.  The client may then cancel the
+transfer at its convienence with a STOP_SENDING frame.
+
+On the server side, any stream that is closed before all 8 bytes are received
+should just be ignored, and gracefully closed on its end (if applicable).
+
+### Bidirectional vs Unidirectional Streams
+
+When a client uses a bidirectional stream to request a response payload from the
+server, the server sends the requested data on the same stream.  If no data is
+requested by the client, the server merely closes its side of the stream.
+
+When a client uses a unidirectional stream to request a response payload from
+the server, the server opens a new unidirectional stream to send the requested
+data.  If no data is requested by the client, the server need take no action.
 
 # Example Performance Scenarios
 
-Generally, all stream payload based tests can be achieved either with
-bidirectional or unidirectional streams.  The only difference is that the
-server's response is on the same stream for bidirectional streams but on a new
-stream when using unidirectional streams.
+All stream payload based tests below can be achieved either with bidirectional
+or unidirectional streams.
 
 ## Single Connection Bulk Throughput
 
@@ -92,6 +127,9 @@ server response size, sends the upload payload and then closes (FIN) the stream.
 
 For a download test, the client again opens a single stream, encodes the
 server's response size (N bytes) and then closes the stream.
+
+The total throughput rate is measured by the client, and is calculated by
+dividing the total bytes sent or received by
 
 ## Requests Per Second
 
