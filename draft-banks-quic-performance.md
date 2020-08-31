@@ -24,9 +24,9 @@ author:
 
 --- abstract
 
-The QUIC performace protocol provides a simple, general-purpose protocol for
+The QUIC performance protocol provides a simple, general-purpose protocol for
 testing the performance characteristics of a QUIC implementation.  With this
-protocol a genric server can support any number of client-driven performance
+protocol a generic server can support any number of client-driven performance
 tests and configurations.  Standardizing the performance protocol allows for
 easy comparisons across different QUIC implementations.
 
@@ -35,7 +35,7 @@ easy comparisons across different QUIC implementations.
 # Introduction
 
 The various QUIC implementations are still quite young and not exhaustively
-tested for many different peformance heavy scenarios.  Some have done their own
+tested for many different performance heavy scenarios.  Some have done their own
 testing, but many are just starting this process.  Additionally, most only test
 the performance between their own client and server.  The QUIC performance
 protocol aims to standardize the performance testing mechanisms.  This will
@@ -96,7 +96,7 @@ encode a 64-bit unsigned integer in network byte order to indicate the length of
 data the client wishes the server to respond with.  An encoded value of zero is
 perfectly legal, and a value of MAX_UINT64 (0xFFFFFFFFFFFFFFFF) is practically
 used to indicate an unlimited server response.  The client may then cancel the
-transfer at its convienence with a STOP_SENDING frame.
+transfer at its convenience with a STOP_SENDING frame.
 
 On the server side, any stream that is closed before all 8 bytes are received
 should just be ignored, and gracefully closed on its end (if applicable).
@@ -172,7 +172,57 @@ requests phase of the connection (not including the handshake and wait period).
 
 ## Handshakes Per Second
 
+Another metric that may reveal the connection setup efficiency is handshakes
+per second. It lets multiple clients (possibly from multiple machines) setup
+QUIC connections (then close them by CONNECTION_CLOSE) with a single server.
+Variables that may potentially affect the results are:
+
+ - The number of client machines.
+ - The number of connections a client can initialize in a second.
+ - The size of ClientHello (long list of supported ciphers, versions, etc.). 
+
+All the variables may be changed to measure the maximum handshakes per second
+in a given scenario.
+
+The test starts with the multiple clients initializing connections and waiting
+for them to be connected with the single server on the other machine. It's
+recommended to wait an additional couple of seconds for connections to settle
+down.
+
+The clients will initialize as many connections as possible to saturate the
+server. Once the client receive the handshake from the server, it terminates
+the connection by sending a CONNECTION_CLOSE to the server. The total
+handshakes per second are calculated by dividing the time period by the total
+number of connections that have successfully established during that time.
+
+## Throughput Fairness Index
+
+Connection fairness is able to help us reveal how the throughput is allocated
+among each connection. A way of doing it is to establish multiple hundreds or
+thousands of concurrent connections and request the same data block from a
+single server. Variables that have potential impact on the results are:
+
+ - the size of the data being requested.
+ - the number of the concurrent connections.
+
+The test starts with establishing several hundreds or thousands of concurrent
+connections and downloading the same data block from the server simultaneously.
+
+The index of fairness is calculated using the complete time of each connection
+and the size of the data block in [Jain's manner]
+(https://www.cse.wustl.edu/~jain/atmf/ftp/af_fair.pdf).
+
+Be noted that the relationship between fairness and whether the link is
+saturated is uncertain before any test. Thus it is recommended that both cases
+are covered in the test.
+
+TODO: is it necessary that we also provide tests on latency fairness in the
+multi-connection case?
+
+## Maximum Number of Idle Connections
+
 TODO
+
 
 # Things to Note
 
