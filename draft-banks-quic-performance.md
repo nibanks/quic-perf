@@ -172,40 +172,35 @@ requests phase of the connection (not including the handshake and wait period).
 
 ## Handshakes Per Second
 
-TODO
-
-**NOTE:** can it be merged with the test of connection accept throughput? 
-
-## Connection Accept Throughput
-
-Another metric that may reveal the connection setup efficiency is connection
-accept throughput. It lets multiple clients (possibly from multiple machines)
-setup QUIC connections (then close them by CONNECTION_CLOSE) with a single
-server. Variables that may potentially affect the results are:
+Another metric that may reveal the connection setup efficiency is handshakes
+per second. It lets multiple clients (possibly from multiple machines) setup
+QUIC connections (then close them by CONNECTION_CLOSE) with a single server.
+Variables that may potentially affect the results are:
 
  - The number of client machines.
  - The number of connections a client can initialize in a second.
  - The size of ClientHello (long list of supported ciphers, versions, etc.). 
 
-All the variables may be changed to measure the maximum connection accept
-throughput in a given scenario.
+All the variables may be changed to measure the maximum handshakes per second
+in a given scenario.
 
-The test starts with the multiple clients initializing connections and waiting for them
-to be connected with the single server on the other machine. It's recommended to
-wait an additional couple of seconds for connections to settle down.
+The test starts with the multiple clients initializing connections and waiting
+for them to be connected with the single server on the other machine. It's
+recommended to wait an additional couple of seconds for connections to settle
+down.
 
-The clients will initialize as many connections as possible to saturate the server. Once
-the client receive the handshake from the server, it terminates the connection by
-sending a CONNECTION_CLOSE to the server. The total connection accept throughput
-is calculated by dividing the time period by the total number of connections that have
-successfully established during that time.
+The clients will initialize as many connections as possible to saturate the
+server. Once the client receive the handshake from the server, it terminates
+the connection by sending a CONNECTION_CLOSE to the server. The total
+handshakes per second are calculated by dividing the time period by the total
+number of connections that have successfully established during that time.
 
 ## Throughput Fairness Index
 
-Connection fairness is able to help us reveal how the throughput is allocate among each 
-connection. A way of doing it is to establish multiple hundreds or thousands of
-concurrent connections and request the same data block from a single server. Variables
-that have potential impact on the results are:
+Connection fairness is able to help us reveal how the throughput is allocated
+among each connection. A way of doing it is to establish multiple hundreds or
+thousands of concurrent connections and request the same data block from a
+single server. Variables that have potential impact on the results are:
 
  - the size of the data being requested.
  - the number of the concurrent connections.
@@ -213,13 +208,16 @@ that have potential impact on the results are:
 The test starts with establishing several hundreds or thousands of concurrent
 connections and downloading the same data block from the server simultaneously.
 
-The index of fairness is calculated using the complete time of each connection and the size of the data block in [Jain's manner](https://www.cse.wustl.edu/~jain/atmf/ftp/af_fair.pdf).
+The index of fairness is calculated using the complete time of each connection
+and the size of the data block in [Jain's manner]
+(https://www.cse.wustl.edu/~jain/atmf/ftp/af_fair.pdf).
 
-Be noted that the relationship between fairness and whether the link is saturated is
-uncertain before any test. Thus it is recommended that both cases are covered in the
-test.
+Be noted that the relationship between fairness and whether the link is
+saturated is uncertain before any test. Thus it is recommended that both cases
+are covered in the test.
 
-TODO: is it necessary that we also provide tests on latency fairness in the multi-connection case?
+TODO: is it necessary that we also provide tests on latency fairness in the
+multi-connection case?
 
 ## Maximum Number of Idle Connections
 
