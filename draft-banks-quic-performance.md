@@ -20,7 +20,6 @@ author:
     name: Nick Banks
     org: Microsoft Corporation
     email: nibanks@microsoft.com
-    country: U.S.A
 
 --- abstract
 
