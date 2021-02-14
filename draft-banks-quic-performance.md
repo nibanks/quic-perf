@@ -159,8 +159,8 @@ payload for the flow ID and response size should be ignored.
 
 ## Error Codes
 
-Error codes on connections are unused in this protocol and are ignored on
-receipt.
+Application error codes for connections are undefined in this protocol.  They
+should be ignored on receipt.  Transport connection error codes still apply.
 
 There are several scenarios where error codes may be exchanged on streams.
 These error codes are generally used to debug interopability issues between the
