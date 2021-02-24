@@ -1,7 +1,7 @@
 ---
 title: QUIC Performance
 abbrev: QUIC-PERF
-docname: draft-banks-quic-performance-00
+docname: draft-banks-quic-performance-01
 category: exp
 date: 2020
 
@@ -65,8 +65,9 @@ SNI is required to connect, but may be optionally provided if the client wishes.
 
 ## Configuration
 
-TODO - Possible options: use the first stream to exchange configurations data OR
-use a custom transport parameter.
+TODO - Use a different ALPN ("perfcfg"?) to allow for configuring the server?
+Perhaps allowing for a client to "lock" the server for a period of time to
+synchronize independent client testing?
 
 ## Streams
 
@@ -79,16 +80,18 @@ client-driven:
  - The client sends any data it wishes to.
  - The client cleanly closes the stream with a FIN.
 
-When a server receives a stream does the following:
+When a server receives a stream, it does the following:
 
  - The server accepts the new stream.
  - The server processes the encoded response size.
- - The server drains the rest of the client data.
+ - The server drains the rest of the client data, including the FIN.
  - The server then sends any response payload that was requested.
 
-**Note** - Should the server wait for FIN before replying?
+**Note** - While it is possible for a server to "cheat" and start sending its
+data immediately once it knowns the response size. There is no built-in way to
+prevent this behavior. This protocol practically operates on the honor system.
 
-### Encoding Server Response Size
+### Encoding Response Size
 
 Every stream opened by the client uses the first 8 bytes of the stream data to
 encode a 64-bit unsigned integer in network byte order to indicate the length of
@@ -109,6 +112,64 @@ requested by the client, the server merely closes its side of the stream.
 When a client uses a unidirectional stream to request a response payload from
 the server, the server opens a new unidirectional stream to send the requested
 data.  If no data is requested by the client, the server need take no action.
+
+## Unreliable Datagrams
+
+For endpoints that support the QUIC Unreliable Datagram extension, datagrams may
+also be used.  The datagrams are used similarly, but with a few minor differences
+to account for their unreliable nature:
+
+- The client encodes a flow ID and the response size in every datagram sent.
+
+When a server receives a datagram, it does the following:
+
+- The server decodes the flow ID and the response size.
+- If the server has not received a datagram with a new flow ID, it then responds
+  with its own datagrams with matching flow ID.  It sends datagrams up to the
+  requested response size.
+
+**Note** - This design requires the server to maintain connection-wide state.
+This could become a DoS vector.  To avoid this, the client SHOULD use
+monotomically increasing flow ID values and the server may trivially keep track
+of the highest flow ID received to decide on whether it should respond.  This
+solution is not perfect as it can result in reordered datagrams from being
+ignored.
+
+### Encoding Flow ID and Response Size
+
+Every datagram sent by the client uses the first 8 bytes of the payload to
+encode a 64-bit unsigned integer in network byte order to indicate the flow ID,
+and the following 8 bytes to encode a 64-bit unsigned integer in network byte
+order to indicate the total length of data the client wishes the server to
+respond with.  This can be larger that can fit into a single datagram.  In that
+case, the server should continue to send datagrams in response until the total
+length is reached.
+
+To account for possible loss of datagrams, the client encodes the total response
+length for that flow ID in every datagram it sends.  Then, the server needs to
+only respond to the first (if any) datagram it receives.
+
+An encoded value of zero for the response size is perfectly legal, and a value
+of MAX_UINT64 (0xFFFFFFFFFFFFFFFF) is practically used to indicate an unlimited
+server response, but there is no way for the client to cancel receipt of this
+data besides closing the connection.
+
+On the server side, any datagram that received but does not contain enough
+payload for the flow ID and response size should be ignored.
+
+## Error Codes
+
+Application error codes for connections are undefined in this protocol.  They
+should be ignored on receipt.  Transport connection error codes still apply.
+
+There are several scenarios where error codes may be exchanged on streams.
+These error codes are generally used to debug interopability issues between the
+endpoints:
+
+0: Success or No Error
+1: Not Implemented (e.g. receiving a unidirectional stream if not supported)
+2: Rejected (e.g. server is too loaded and can't accept a stream)
+3: Invalid Data (e.g. the client didn't encode the full response size)
 
 # Example Performance Scenarios
 
@@ -178,7 +239,7 @@ Variables that may potentially affect the results are:
 
  - The number of client machines.
  - The number of connections a client can initialize in a second.
- - The size of ClientHello (long list of supported ciphers, versions, etc.). 
+ - The size of ClientHello (long list of supported ciphers, versions, etc.).
 
 All the variables may be changed to measure the maximum handshakes per second
 in a given scenario.
@@ -222,6 +283,12 @@ multi-connection case?
 
 TODO
 
+## Voice & Video
+
+Unreliable datagrams may be used to to produce voice or video-like traffic.
+Then loss, delay and jitter can be measured.
+
+TODO
 
 # Things to Note
 
