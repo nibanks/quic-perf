@@ -18,8 +18,8 @@ author:
   -
     ins: N. Banks
     name: Nick Banks
-    org: Microsoft Corporation
-    email: nibanks@microsoft.com
+    org: Neflix, Inc.
+    email: nickbanks@netflix.com
 
 --- abstract
 
